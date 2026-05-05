@@ -1,0 +1,29 @@
+# Gradle / Android
+.gradle/
+.repo/
+testdir/
+build/
+app/build/
+**/build/
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Kotlin / generated
+*.kotlin_module
+captures/
+.externalNativeBuild/
+.cxx/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Keystores and local secrets
+*.jks
+*.keystore
+*.properties.local
