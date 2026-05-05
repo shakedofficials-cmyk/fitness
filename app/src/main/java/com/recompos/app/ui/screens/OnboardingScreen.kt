@@ -24,7 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.recompos.app.ui.AppViewModel
+import com.recompos.app.ui.components.CheckLine
 import com.recompos.app.ui.components.CoachCard
+import com.recompos.app.ui.components.HeroPanel
+import com.recompos.app.ui.components.ScreenHeader
 import java.time.LocalDate
 
 @Composable
@@ -37,8 +40,17 @@ fun OnboardingScreen(viewModel: AppViewModel) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text("RecompOS", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
-        Text("A 12-week bodybuilding recomp coach. Local-first. No login. No cloud.")
+        ScreenHeader("RecompOS", "A serious 12-week recomp coach in your pocket")
+        HeroPanel(
+            eyebrow = "Local-first",
+            title = "Build muscle without letting the waist run away.",
+            body = "Track training, nutrition, recovery, shoulder safety, and weekly decisions. No login. No ads. No cloud dependency."
+        ) {
+            CheckLine("Today's workout and all exercise cues")
+            CheckLine("Set-by-set logbook with RIR and pain score")
+            CheckLine("Macros, bodyweight, waist, sleep, reflux, steps, cardio")
+            CheckLine("Deload and progression rules built in")
+        }
         CoachCard("Medical disclaimer", "This app is not medical advice. For high triglycerides, reflux, supplements, and vitamin D dosing, consult a licensed clinician.")
         OutlinedTextField(startDate, { startDate = it }, label = { Text("Start date (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -56,7 +68,7 @@ fun OnboardingScreen(viewModel: AppViewModel) {
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Start 12-week block")
+            Text("Start my 12-week block")
         }
     }
 }

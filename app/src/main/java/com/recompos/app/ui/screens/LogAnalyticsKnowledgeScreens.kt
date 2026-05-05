@@ -8,9 +8,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.filled.LocalDining
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -28,21 +38,50 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.recompos.app.ui.AppViewModel
 import com.recompos.app.ui.components.BarChart
 import com.recompos.app.ui.components.CoachCard
+import com.recompos.app.ui.components.HeroPanel
 import com.recompos.app.ui.components.LineChart
+import com.recompos.app.ui.components.MetricPill
+import com.recompos.app.ui.components.ScreenHeader
 import com.recompos.app.ui.components.StatRow
+
+private enum class LogMode(val label: String) { Body("Body"), Nutrition("Food"), Recovery("Recovery"), Habits("Habits"), Photos("Photos") }
 
 @Composable
 fun LogScreen(viewModel: AppViewModel) {
     val nutrition by viewModel.nutrition.collectAsStateWithLifecycle()
     val supplements by viewModel.supplements.collectAsStateWithLifecycle()
     val habits by viewModel.habits.collectAsStateWithLifecycle()
-    LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { Text("Log", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black) }
-        item { BodyQuickLog(viewModel) }
-        item { NutritionQuickLog(viewModel) }
-        item { RecoveryQuickLog(viewModel) }
-        item { CardioHabitQuickLog(viewModel) }
-        item { PhotoQuickLog(viewModel) }
+    var mode by remember { mutableStateOf(LogMode.Body) }
+    LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        item { ScreenHeader("Log", "Fast check-ins for the things that move the needle") }
+        item {
+            HeroPanel("Coach input", "Pick one thing. Log it fast.", "The best tracker is the one you actually use after a hard session.") {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    MetricPill("Macros", nutrition.size.toString(), Modifier.weight(1f))
+                    MetricPill("Supps", supplements.size.toString(), Modifier.weight(1f))
+                    MetricPill("Habits", habits.size.toString(), Modifier.weight(1f))
+                }
+            }
+        }
+        item {
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                LogMode.values().forEach {
+                    FilterChip(selected = mode == it, onClick = { mode = it }, label = { Text(it.label) })
+                }
+            }
+        }
+        item {
+            when (mode) {
+                LogMode.Body -> BodyQuickLog(viewModel)
+                LogMode.Nutrition -> NutritionQuickLog(viewModel)
+                LogMode.Recovery -> RecoveryQuickLog(viewModel)
+                LogMode.Habits -> CardioHabitQuickLog(viewModel)
+                LogMode.Photos -> PhotoQuickLog(viewModel)
+            }
+        }
         item {
             CoachCard("Latest nutrition") {
                 nutrition.take(3).forEach { StatRow("${it.dateEpochDay}", "${it.calories} kcal / P${it.protein} C${it.carbs} F${it.fat}") }
@@ -63,6 +102,7 @@ private fun PhotoQuickLog(viewModel: AppViewModel) {
     var uri by remember { mutableStateOf("") }
     var viewType by remember { mutableStateOf("front") }
     CoachCard("Progress Photos", "Every 2 weeks. Store a local URI only; nothing is uploaded.") {
+        Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("front", "side", "back").forEach {
                 FilterChip(selected = viewType == it, onClick = { viewType = it }, label = { Text(it) })
@@ -80,6 +120,7 @@ private fun BodyQuickLog(viewModel: AppViewModel) {
     var weight by remember { mutableStateOf("") }
     var waist by remember { mutableStateOf("") }
     CoachCard("Body Log", "Morning bodyweight 4x/week. Waist at navel 1x/week.") {
+        Icon(Icons.Default.Scale, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         OutlinedTextField(weight, { weight = it }, label = { Text("Bodyweight") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(waist, { waist = it }, label = { Text("Waist") }, modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
@@ -96,6 +137,7 @@ private fun NutritionQuickLog(viewModel: AppViewModel) {
     var carbs by remember { mutableStateOf("") }
     var fat by remember { mutableStateOf("") }
     CoachCard("Nutrition", "Training target: 2600 kcal, 190P, 300C, 65-70F. Rest target: 2300-2400 kcal, 190P, 220-240C, 70-75F.") {
+        Icon(Icons.Default.LocalDining, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         OutlinedTextField(calories, { calories = it }, label = { Text("Calories") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(protein, { protein = it }, label = { Text("Protein") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(carbs, { carbs = it }, label = { Text("Carbs") }, modifier = Modifier.fillMaxWidth())
@@ -116,6 +158,7 @@ private fun RecoveryQuickLog(viewModel: AppViewModel) {
     var bloating by remember { mutableStateOf(false) }
     var triggers by remember { mutableStateOf("") }
     CoachCard("Sleep + Digestion/Reflux") {
+        Icon(Icons.Default.Bedtime, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         OutlinedTextField(hours, { hours = it }, label = { Text("Sleep hours") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(quality, { quality = it }, label = { Text("Sleep quality 1-10") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(digestion, { digestion = it }, label = { Text("Digestion score 1-10") }, modifier = Modifier.fillMaxWidth())
@@ -141,6 +184,7 @@ private fun CardioHabitQuickLog(viewModel: AppViewModel) {
     var mobility by remember { mutableStateOf(false) }
     var breathing by remember { mutableStateOf(false) }
     CoachCard("Cardio + Habits", "Zone 2: you can talk, but not comfortably sing. Avoid brutal HIIT right now.") {
+        Icon(Icons.Default.DirectionsRun, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         OutlinedTextField(steps, { steps = it }, label = { Text("Steps") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(modality, { modality = it }, label = { Text("Cardio modality") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(duration, { duration = it }, label = { Text("Duration minutes") }, modifier = Modifier.fillMaxWidth())
@@ -168,7 +212,7 @@ fun AnalyticsScreen(viewModel: AppViewModel) {
     val sets by viewModel.sets.collectAsStateWithLifecycle()
     val history by viewModel.history.collectAsStateWithLifecycle()
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { Text("Analytics", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black) }
+        item { ScreenHeader("Analytics", "Trends, adherence, and coach decisions") }
         item { CoachCard(dashboard.coachTitle, dashboard.coachMessage) }
         item { CoachCard("Bodyweight trend") { LineChart(bodyweights.map { it.weight }) } }
         item { CoachCard("Waist trend") { LineChart(waists.map { it.waist }) } }
@@ -186,7 +230,7 @@ fun AnalyticsScreen(viewModel: AppViewModel) {
 fun KnowledgeScreen(viewModel: AppViewModel) {
     val articles by viewModel.articles.collectAsStateWithLifecycle()
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { Text("Knowledge Base", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black) }
+        item { ScreenHeader("Knowledge", "Program rules without the fluff") }
         items(articles) { article -> CoachCard(article.title, article.body) }
     }
 }
@@ -198,7 +242,7 @@ fun SettingsScreen(viewModel: AppViewModel) {
     var importText by remember { mutableStateOf("") }
     var importStatus by remember { mutableStateOf("") }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { Text("Settings", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black) }
+        item { ScreenHeader("Settings", "Privacy, export, reminders, and display") }
         item {
             CoachCard("Units") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
