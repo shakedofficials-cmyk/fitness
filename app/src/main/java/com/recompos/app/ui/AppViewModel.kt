@@ -17,8 +17,10 @@ import com.recompos.app.domain.DeloadCalculator
 import com.recompos.app.domain.ProgramCalendar
 import com.recompos.app.export.ExportImportManager
 import com.recompos.app.notifications.ReminderScheduler
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -54,6 +56,9 @@ class AppViewModel(
     private val coach = CoachReviewEngine()
     private val exportImport = ExportImportManager()
     val deloadCalculator = DeloadCalculator()
+
+    private val _uiEvent = MutableSharedFlow<String>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     val preferences = settingsStore.preferences.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppPreferences())
     val workouts = repository.workouts().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -132,8 +137,21 @@ class AppViewModel(
         }
     }
 
-    fun finishWorkout(sessionId: Long) = viewModelScope.launch { repository.finishWorkout(sessionId) }
-    fun skipExercise(exerciseSessionId: Long, reason: String) = viewModelScope.launch { repository.skipExercise(exerciseSessionId, reason) }
+    fun finishWorkout(sessionId: Long) = viewModelScope.launch {
+        repository.finishWorkout(sessionId)
+        _uiEvent.emit("Workout finished and saved.")
+    }
+
+    fun skipExercise(exerciseSessionId: Long, reason: String) = viewModelScope.launch {
+        repository.skipExercise(exerciseSessionId, reason)
+        _uiEvent.emit("Exercise skipped.")
+    }
+
+    fun deleteWorkoutSession(sessionId: Long) = viewModelScope.launch {
+        repository.deleteWorkoutSession(sessionId)
+        _uiEvent.emit("Workout session deleted.")
+    }
+
     fun logSet(exerciseSessionId: Long, setNumber: Int, weight: Double, reps: Int, rir: Int, pain: Int, warmup: Boolean, drop: Boolean, notes: String) {
         viewModelScope.launch {
             repository.logSet(
@@ -151,19 +169,114 @@ class AppViewModel(
                     completedAtMillis = System.currentTimeMillis()
                 )
             )
+            _uiEvent.emit("Set $setNumber saved.")
         }
     }
 
-    fun logBodyweight(value: Double) = viewModelScope.launch { repository.logBodyweight(value) }
-    fun logWaist(value: Double) = viewModelScope.launch { repository.logWaist(value) }
-    fun logNutrition(calories: Int, protein: Int, carbs: Int, fat: Int) = viewModelScope.launch { repository.logNutrition(calories, protein, carbs, fat) }
-    fun logSleep(hours: Double, quality: Int) = viewModelScope.launch { repository.logSleep(hours, quality) }
-    fun logDigestion(score: Int, reflux: Boolean, bloating: Boolean, triggers: String) = viewModelScope.launch { repository.logDigestion(score, reflux, bloating, triggers) }
-    fun logSteps(steps: Int) = viewModelScope.launch { repository.logSteps(steps) }
-    fun logCardio(modality: String, duration: Int, intensity: String) = viewModelScope.launch { repository.logCardio(modality, duration, intensity) }
-    fun logSupplement(creatine: Boolean, whey: Boolean, vitaminD: Boolean, omega3: Boolean) = viewModelScope.launch { repository.logSupplement(creatine, whey, vitaminD, omega3) }
-    fun logHabit(mobility: Boolean, breathing: Boolean, photo: Boolean) = viewModelScope.launch { repository.logHabit(mobility, breathing, photo) }
-    fun logPhoto(viewType: String, uri: String) = viewModelScope.launch { repository.logPhoto(viewType, uri) }
+    fun deleteSet(id: Long) = viewModelScope.launch {
+        repository.deleteSet(id)
+        _uiEvent.emit("Set deleted.")
+    }
+
+    fun logBodyweight(value: Double) = viewModelScope.launch {
+        repository.logBodyweight(value)
+        _uiEvent.emit("Bodyweight saved.")
+    }
+
+    fun deleteBodyweight(id: Long) = viewModelScope.launch {
+        repository.deleteBodyweight(id)
+        _uiEvent.emit("Bodyweight log deleted.")
+    }
+
+    fun logWaist(value: Double) = viewModelScope.launch {
+        repository.logWaist(value)
+        _uiEvent.emit("Waist saved.")
+    }
+
+    fun deleteWaist(id: Long) = viewModelScope.launch {
+        repository.deleteWaist(id)
+        _uiEvent.emit("Waist log deleted.")
+    }
+
+    fun logNutrition(calories: Int, protein: Int, carbs: Int, fat: Int) = viewModelScope.launch {
+        repository.logNutrition(calories, protein, carbs, fat)
+        _uiEvent.emit("Nutrition saved.")
+    }
+
+    fun deleteNutrition(id: Long) = viewModelScope.launch {
+        repository.deleteNutrition(id)
+        _uiEvent.emit("Nutrition log deleted.")
+    }
+
+    fun logSleep(hours: Double, quality: Int) = viewModelScope.launch {
+        repository.logSleep(hours, quality)
+        _uiEvent.emit("Sleep saved.")
+    }
+
+    fun deleteSleep(id: Long) = viewModelScope.launch {
+        repository.deleteSleep(id)
+        _uiEvent.emit("Sleep log deleted.")
+    }
+
+    fun logDigestion(score: Int, reflux: Boolean, bloating: Boolean, triggers: String) = viewModelScope.launch {
+        repository.logDigestion(score, reflux, bloating, triggers)
+        _uiEvent.emit("Digestion saved.")
+    }
+
+    fun deleteDigestion(id: Long) = viewModelScope.launch {
+        repository.deleteDigestion(id)
+        _uiEvent.emit("Digestion log deleted.")
+    }
+
+    fun logSteps(steps: Int) = viewModelScope.launch {
+        repository.logSteps(steps)
+        _uiEvent.emit("Steps saved.")
+    }
+
+    fun deleteSteps(id: Long) = viewModelScope.launch {
+        repository.deleteSteps(id)
+        _uiEvent.emit("Steps log deleted.")
+    }
+
+    fun logCardio(modality: String, duration: Int, intensity: String) = viewModelScope.launch {
+        repository.logCardio(modality, duration, intensity)
+        _uiEvent.emit("Cardio saved.")
+    }
+
+    fun deleteCardio(id: Long) = viewModelScope.launch {
+        repository.deleteCardio(id)
+        _uiEvent.emit("Cardio log deleted.")
+    }
+
+    fun logSupplement(creatine: Boolean, whey: Boolean, vitaminD: Boolean, omega3: Boolean) = viewModelScope.launch {
+        repository.logSupplement(creatine, whey, vitaminD, omega3)
+        _uiEvent.emit("Supplements saved.")
+    }
+
+    fun deleteSupplement(id: Long) = viewModelScope.launch {
+        repository.deleteSupplement(id)
+        _uiEvent.emit("Supplement log deleted.")
+    }
+
+    fun logHabit(mobility: Boolean, breathing: Boolean, photo: Boolean) = viewModelScope.launch {
+        repository.logHabit(mobility, breathing, photo)
+        _uiEvent.emit("Habits saved.")
+    }
+
+    fun deleteHabit(id: Long) = viewModelScope.launch {
+        repository.deleteHabit(id)
+        _uiEvent.emit("Habit log deleted.")
+    }
+
+    fun logPhoto(viewType: String, uri: String) = viewModelScope.launch {
+        repository.logPhoto(viewType, uri)
+        _uiEvent.emit("Photo URI saved.")
+    }
+
+    fun deletePhoto(id: Long) = viewModelScope.launch {
+        repository.deletePhoto(id)
+        _uiEvent.emit("Photo log deleted.")
+    }
 
     fun buildJsonExport(): String = exportImport.exportJson(
         bodyweights.value,
@@ -222,6 +335,7 @@ class AppViewModel(
 
     fun exerciseSessions(sessionId: Long) = repository.exerciseSessions(sessionId)
     fun exerciseSets(exerciseSessionId: Long) = repository.sets(exerciseSessionId)
+    fun lastExerciseSets(exerciseTemplateId: Int, currentWorkoutSessionId: Long) = repository.lastExerciseSets(exerciseTemplateId, currentWorkoutSessionId)
     fun restTasks(workoutTemplateId: Int) = repository.restTasks(workoutTemplateId)
 }
 
