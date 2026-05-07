@@ -59,6 +59,31 @@ interface RecompDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertCardioLogs(logs: List<CardioLogEntity>)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertSetLogs(logs: List<SetLogEntity>)
 
+    @Query("DELETE FROM SetLogEntity WHERE id = :id") suspend fun deleteSetLog(id: Long)
+    @Query("DELETE FROM BodyweightLogEntity WHERE id = :id") suspend fun deleteBodyweightLog(id: Long)
+    @Query("DELETE FROM WaistLogEntity WHERE id = :id") suspend fun deleteWaistLog(id: Long)
+    @Query("DELETE FROM NutritionLogEntity WHERE id = :id") suspend fun deleteNutritionLog(id: Long)
+    @Query("DELETE FROM SleepLogEntity WHERE id = :id") suspend fun deleteSleepLog(id: Long)
+    @Query("DELETE FROM DigestionLogEntity WHERE id = :id") suspend fun deleteDigestionLog(id: Long)
+    @Query("DELETE FROM StepsLogEntity WHERE id = :id") suspend fun deleteStepsLog(id: Long)
+    @Query("DELETE FROM CardioLogEntity WHERE id = :id") suspend fun deleteCardioLog(id: Long)
+    @Query("DELETE FROM SupplementLogEntity WHERE id = :id") suspend fun deleteSupplementLog(id: Long)
+    @Query("DELETE FROM HabitLogEntity WHERE id = :id") suspend fun deleteHabitLog(id: Long)
+    @Query("DELETE FROM ProgressPhotoEntity WHERE id = :id") suspend fun deletePhotoLog(id: Long)
+    @Query("DELETE FROM WorkoutSessionEntity WHERE id = :id") suspend fun deleteWorkoutSession(id: Long)
+
+    @Query("""
+        SELECT * FROM SetLogEntity
+        WHERE exerciseSessionId = (
+            SELECT id FROM ExerciseSessionEntity
+            WHERE exerciseTemplateId = :exerciseTemplateId
+            AND workoutSessionId < :currentWorkoutSessionId
+            ORDER BY workoutSessionId DESC LIMIT 1
+        )
+        ORDER BY setNumber
+    """)
+    fun observeLastExerciseSets(exerciseTemplateId: Int, currentWorkoutSessionId: Long): Flow<List<SetLogEntity>>
+
     @Query("SELECT * FROM BodyweightLogEntity ORDER BY dateEpochDay") fun observeBodyweights(): Flow<List<BodyweightLogEntity>>
     @Query("SELECT * FROM WaistLogEntity ORDER BY dateEpochDay") fun observeWaists(): Flow<List<WaistLogEntity>>
     @Query("SELECT * FROM NutritionLogEntity ORDER BY dateEpochDay DESC") fun observeNutrition(): Flow<List<NutritionLogEntity>>

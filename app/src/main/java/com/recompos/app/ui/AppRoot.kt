@@ -23,11 +23,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.recompos.app.ui.screens.*
 import com.recompos.app.ui.theme.RecompTheme
+import kotlinx.coroutines.flow.collectLatest
 
 private data class Tab(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
 
@@ -41,6 +46,12 @@ fun AppRoot(viewModel: AppViewModel) {
             return@RecompTheme
         }
         val nav = rememberNavController()
+        val snackbarHostState = remember { SnackbarHostState() }
+        LaunchedEffect(Unit) {
+            viewModel.uiEvent.collectLatest { message ->
+                snackbarHostState.showSnackbar(message)
+            }
+        }
         val tabs = listOf(
             Tab("today", "Today", Icons.Default.CalendarToday),
             Tab("workout", "Workout", Icons.Default.FitnessCenter),
@@ -49,6 +60,7 @@ fun AppRoot(viewModel: AppViewModel) {
             Tab("knowledge", "Knowledge", Icons.Default.Book)
         )
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = { Text("RecompOS") },

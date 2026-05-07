@@ -13,7 +13,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -36,6 +38,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -108,8 +112,35 @@ fun WorkoutScreen(viewModel: AppViewModel, nav: NavHostController) {
         item { Text("Workout History", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
         if (history.isEmpty()) item { CoachCard("No completed sessions yet", "Start a workout and finish it to build your logbook.") }
         items(history) { session ->
-            CoachCard("Week ${session.weekNumber} Day ${session.dayNumber}", "Status: ${session.status}") {
-                Text("Started: ${session.startedAtMillis}")
+            var expanded by remember { mutableStateOf(false) }
+            val sessionSets by viewModel.exerciseSessions(session.id).collectAsStateWithLifecycle(initialValue = emptyList())
+            val allTemplates by viewModel.allExercises.collectAsStateWithLifecycle()
+
+            CoachCard(
+                title = "Week ${session.weekNumber} Day ${session.dayNumber}",
+                supporting = "Status: ${session.status}",
+                modifier = Modifier.clickable { expanded = !expanded }
+            ) {
+                if (expanded) {
+                    sessionSets.forEach { exerciseSession ->
+                        val template = allTemplates.firstOrNull { it.id == exerciseSession.exerciseTemplateId }
+                        val sets by viewModel.exerciseSets(exerciseSession.id).collectAsStateWithLifecycle(initialValue = emptyList())
+                        Text(template?.name ?: "Unknown Exercise", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+                        sets.forEach { set ->
+                            Text("Set ${set.setNumber}: ${set.weight} x ${set.reps} (RIR ${set.rir})", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    Button(
+                        onClick = { viewModel.deleteWorkoutSession(session.id) },
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null)
+                        Text("Delete Session")
+                    }
+                } else {
+                    Text("Tap to view details", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                }
             }
         }
     }
@@ -148,6 +179,10 @@ fun ActiveWorkoutScreen(viewModel: AppViewModel, sessionId: Long, nav: NavHostCo
     var selectedIndex by remember { mutableIntStateOf(0) }
     val current = sessions.getOrNull(selectedIndex)
     val currentTemplate = templates.firstOrNull { it.id == current?.exerciseTemplateId }
+
+    val currentSets by viewModel.exerciseSets(current?.id ?: 0L).collectAsStateWithLifecycle(initialValue = emptyList())
+    val lastSets by viewModel.lastExerciseSets(currentTemplate?.id ?: 0, sessionId).collectAsStateWithLifecycle(initialValue = emptyList())
+
     var painDialog by remember { mutableStateOf(false) }
     var finishDialog by remember { mutableStateOf(false) }
     var restSeconds by remember { mutableIntStateOf(0) }
@@ -177,6 +212,29 @@ fun ActiveWorkoutScreen(viewModel: AppViewModel, sessionId: Long, nav: NavHostCo
                     if (prescription.deload) Text("Deload prescription: ${prescription.sets} sets at ${prescription.rir} RIR. No drop sets or failure.")
                     Text(currentTemplate.cues)
                     if (restSeconds > 0) Text("Rest timer: ${restSeconds}s", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+            }
+            if (lastSets.isNotEmpty()) {
+                item {
+                    CoachCard("Last Session") {
+                        lastSets.forEach { set ->
+                            StatRow("Set ${set.setNumber}", "${set.weight} x ${set.reps} (RIR ${set.rir})")
+                        }
+                    }
+                }
+            }
+            if (currentSets.isNotEmpty()) {
+                item {
+                    CoachCard("Completed Sets") {
+                        currentSets.forEach { set ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text("Set ${set.setNumber}: ${set.weight} x ${set.reps} (RIR ${set.rir})", style = MaterialTheme.typography.bodyMedium)
+                                IconButton(onClick = { viewModel.deleteSet(set.id) }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete set", tint = MaterialTheme.colorScheme.error)
+                                }
+                            }
+                        }
+                    }
                 }
             }
             item { SetLogger(viewModel, current, currentTemplate, onPain = { painDialog = true }, onSaved = { restSeconds = currentTemplate.restSecondsMin }) }
@@ -240,6 +298,8 @@ private fun SetLogger(
     var warmup by remember(session.id) { mutableStateOf(false) }
     var drop by remember(session.id) { mutableStateOf(false) }
     var notes by remember(session.id) { mutableStateOf("") }
+    val haptic = LocalHapticFeedback.current
+
     CoachCard("Log set", "Keep it honest. Clean reps beat fantasy numbers.") {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(setNumber, { setNumber = it }, label = { Text("Set") }, modifier = Modifier.weight(1f))
@@ -262,6 +322,7 @@ private fun SetLogger(
         Button(onClick = {
             val painValue = pain.toIntOrNull() ?: 0
             viewModel.logSet(session.id, setNumber.toIntOrNull() ?: 1, weight.toDoubleOrNull() ?: 0.0, reps.toIntOrNull() ?: 0, rir.toIntOrNull() ?: 1, painValue, warmup, drop, notes)
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             if (painValue > 3 || (drop && !template.dropSetAllowed) || ((rir.toIntOrNull() ?: 1) <= 0 && template.isCompound())) onPain()
             onSaved()
             setNumber = ((setNumber.toIntOrNull() ?: 1) + 1).toString()

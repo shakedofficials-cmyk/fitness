@@ -13,11 +13,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material3.Button
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -83,15 +85,89 @@ fun LogScreen(viewModel: AppViewModel) {
             }
         }
         item {
-            CoachCard("Latest nutrition") {
-                nutrition.take(3).forEach { StatRow("${it.dateEpochDay}", "${it.calories} kcal / P${it.protein} C${it.carbs} F${it.fat}") }
-                if (nutrition.isEmpty()) Text("No macro logs yet.")
-            }
-        }
-        item {
-            CoachCard("Supplements and habits") {
-                Text("Supplement logs: ${supplements.size}")
-                Text("Habit logs: ${habits.size}")
+            val bodyweights by viewModel.bodyweights.collectAsStateWithLifecycle()
+            val waists by viewModel.waists.collectAsStateWithLifecycle()
+            val steps by viewModel.steps.collectAsStateWithLifecycle()
+            val cardio by viewModel.cardio.collectAsStateWithLifecycle()
+            val sleep by viewModel.sleep.collectAsStateWithLifecycle()
+            val digestion by viewModel.digestion.collectAsStateWithLifecycle()
+            val photos by viewModel.photos.collectAsStateWithLifecycle()
+
+            when (mode) {
+                LogMode.Body -> {
+                    CoachCard("Latest Body Logs") {
+                        bodyweights.takeLast(5).reversed().forEach {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text("Weight: ${it.weight} (Day ${it.dateEpochDay})", style = MaterialTheme.typography.bodyMedium)
+                                IconButton(onClick = { viewModel.deleteBodyweight(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                        waists.takeLast(5).reversed().forEach {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text("Waist: ${it.waist} (Day ${it.dateEpochDay})", style = MaterialTheme.typography.bodyMedium)
+                                IconButton(onClick = { viewModel.deleteWaist(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                    }
+                }
+                LogMode.Nutrition -> {
+                    CoachCard("Latest Nutrition Logs") {
+                        nutrition.take(5).forEach {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text("${it.calories} kcal (P${it.protein} C${it.carbs} F${it.fat})", style = MaterialTheme.typography.bodyMedium)
+                                IconButton(onClick = { viewModel.deleteNutrition(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                    }
+                }
+                LogMode.Recovery -> {
+                    CoachCard("Latest Recovery Logs") {
+                        sleep.takeLast(5).reversed().forEach {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text("Sleep: ${it.hours}h, Q:${it.quality}", style = MaterialTheme.typography.bodyMedium)
+                                IconButton(onClick = { viewModel.deleteSleep(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                        digestion.takeLast(5).reversed().forEach {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text("Digestion: ${it.score}/10", style = MaterialTheme.typography.bodyMedium)
+                                IconButton(onClick = { viewModel.deleteDigestion(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                    }
+                }
+                LogMode.Habits -> {
+                    CoachCard("Latest Habit Logs") {
+                        steps.takeLast(5).reversed().forEach {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text("Steps: ${it.steps}", style = MaterialTheme.typography.bodyMedium)
+                                IconButton(onClick = { viewModel.deleteSteps(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                        supplements.take(5).forEach {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text("Supps: ${if(it.creatineTaken) "Cr " else ""}${if(it.wheyTaken) "Wh " else ""}${if(it.vitaminDTaken) "D " else ""}${if(it.omega3Taken) "Ω3" else ""}", style = MaterialTheme.typography.bodyMedium)
+                                IconButton(onClick = { viewModel.deleteSupplement(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                        cardio.takeLast(5).reversed().forEach {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text("Cardio: ${it.modality} (${it.durationMinutes}m)", style = MaterialTheme.typography.bodyMedium)
+                                IconButton(onClick = { viewModel.deleteCardio(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                    }
+                }
+                LogMode.Photos -> {
+                    CoachCard("Latest Photo Logs") {
+                        photos.take(5).forEach {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text("${it.viewType}: ${it.uri}", maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                                IconButton(onClick = { viewModel.deletePhoto(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
