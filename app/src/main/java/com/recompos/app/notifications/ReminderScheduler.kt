@@ -38,7 +38,7 @@ class ReminderScheduler(private val context: Context) {
         fun createChannel(context: Context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val manager = context.getSystemService(NotificationManager::class.java)
-                val channel = NotificationChannel(channelId, "RecompOS Coach", NotificationManager.IMPORTANCE_DEFAULT)
+                val channel = NotificationChannel(channelId, "Greek God Physique Coach", NotificationManager.IMPORTANCE_DEFAULT)
                 manager.createNotificationChannel(channel)
             }
         }
@@ -61,7 +61,7 @@ class DailyReminderWorker(appContext: Context, params: WorkerParameters) : Corou
         val message = messages[(System.currentTimeMillis() / TimeUnit.DAYS.toMillis(1)).toInt() % messages.size]
         val notification = NotificationCompat.Builder(applicationContext, ReminderScheduler.channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("RecompOS")
+            .setContentTitle("Greek God Physique")
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setAutoCancel(true)

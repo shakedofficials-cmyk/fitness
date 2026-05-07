@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Scale
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Checkbox
@@ -27,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -99,13 +101,13 @@ fun LogScreen(viewModel: AppViewModel) {
                         bodyweights.takeLast(5).reversed().forEach {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Text("Weight: ${it.weight} (Day ${it.dateEpochDay})", style = MaterialTheme.typography.bodyMedium)
-                                IconButton(onClick = { viewModel.deleteBodyweight(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                IconButton(onClick = { viewModel.deleteBodyweight(it) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             }
                         }
                         waists.takeLast(5).reversed().forEach {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Text("Waist: ${it.waist} (Day ${it.dateEpochDay})", style = MaterialTheme.typography.bodyMedium)
-                                IconButton(onClick = { viewModel.deleteWaist(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                IconButton(onClick = { viewModel.deleteWaist(it) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             }
                         }
                     }
@@ -115,7 +117,7 @@ fun LogScreen(viewModel: AppViewModel) {
                         nutrition.take(5).forEach {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Text("${it.calories} kcal (P${it.protein} C${it.carbs} F${it.fat})", style = MaterialTheme.typography.bodyMedium)
-                                IconButton(onClick = { viewModel.deleteNutrition(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                IconButton(onClick = { viewModel.deleteNutrition(it) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             }
                         }
                     }
@@ -125,13 +127,13 @@ fun LogScreen(viewModel: AppViewModel) {
                         sleep.takeLast(5).reversed().forEach {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Text("Sleep: ${it.hours}h, Q:${it.quality}", style = MaterialTheme.typography.bodyMedium)
-                                IconButton(onClick = { viewModel.deleteSleep(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                IconButton(onClick = { viewModel.deleteSleep(it) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             }
                         }
                         digestion.takeLast(5).reversed().forEach {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Text("Digestion: ${it.score}/10", style = MaterialTheme.typography.bodyMedium)
-                                IconButton(onClick = { viewModel.deleteDigestion(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                IconButton(onClick = { viewModel.deleteDigestion(it) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             }
                         }
                     }
@@ -141,19 +143,19 @@ fun LogScreen(viewModel: AppViewModel) {
                         steps.takeLast(5).reversed().forEach {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Text("Steps: ${it.steps}", style = MaterialTheme.typography.bodyMedium)
-                                IconButton(onClick = { viewModel.deleteSteps(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                IconButton(onClick = { viewModel.deleteSteps(it) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             }
                         }
                         supplements.take(5).forEach {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                Text("Supps: ${if(it.creatineTaken) "Cr " else ""}${if(it.wheyTaken) "Wh " else ""}${if(it.vitaminDTaken) "D " else ""}${if(it.omega3Taken) "Ω3" else ""}", style = MaterialTheme.typography.bodyMedium)
-                                IconButton(onClick = { viewModel.deleteSupplement(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                Text("Supps: ${if(it.creatineTaken) "Cr " else ""}${if(it.wheyTaken) "Wh " else ""}${if(it.vitaminDTaken) "D " else ""}${if(it.omega3Taken) "O3" else ""}", style = MaterialTheme.typography.bodyMedium)
+                                IconButton(onClick = { viewModel.deleteSupplement(it) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             }
                         }
                         cardio.takeLast(5).reversed().forEach {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Text("Cardio: ${it.modality} (${it.durationMinutes}m)", style = MaterialTheme.typography.bodyMedium)
-                                IconButton(onClick = { viewModel.deleteCardio(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                IconButton(onClick = { viewModel.deleteCardio(it) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             }
                         }
                     }
@@ -163,7 +165,7 @@ fun LogScreen(viewModel: AppViewModel) {
                         photos.take(5).forEach {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Text("${it.viewType}: ${it.uri}", maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                                IconButton(onClick = { viewModel.deletePhoto(it.id) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                IconButton(onClick = { viewModel.deletePhoto(it) }) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             }
                         }
                     }
@@ -317,6 +319,7 @@ fun SettingsScreen(viewModel: AppViewModel) {
     var exportText by remember { mutableStateOf("") }
     var importText by remember { mutableStateOf("") }
     var importStatus by remember { mutableStateOf("") }
+    var confirmClear by remember { mutableStateOf(false) }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { ScreenHeader("Settings", "Privacy, export, reminders, and display") }
         item {
@@ -361,6 +364,34 @@ fun SettingsScreen(viewModel: AppViewModel) {
                 if (importStatus.isNotBlank()) Text(importStatus)
             }
         }
-        item { CoachCard("About / disclaimer", "RecompOS stores data locally and does not require login. This app is not medical advice. Consult a licensed clinician for high triglycerides, reflux, supplements, and vitamin D dosing.") }
+        item {
+            CoachCard("Clear data", "Delete all logs and workout history from this device. The built-in program stays installed.") {
+                Button(
+                    onClick = { confirmClear = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Text("Clear all logs")
+                }
+            }
+        }
+        item { CoachCard("About / disclaimer", "Greek God Physique stores data locally and does not require login. This app is not medical advice. Consult a licensed clinician for high triglycerides, reflux, supplements, and vitamin D dosing.") }
+    }
+    if (confirmClear) {
+        AlertDialog(
+            onDismissRequest = { confirmClear = false },
+            title = { Text("Clear all logs?") },
+            text = { Text("This removes workout history, sets, body logs, nutrition, recovery, cardio, habits, and photos from this device. Export first if you want a backup.") },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.clearAllUserData()
+                    confirmClear = false
+                }, colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                    Text("Clear logs")
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Cancel") } }
+        )
     }
 }

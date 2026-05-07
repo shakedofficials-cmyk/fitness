@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "RecompOS"
+rootProject.name = "GreekGodPhysique"
 include(":app")

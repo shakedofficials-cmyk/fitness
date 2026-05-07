@@ -229,7 +229,7 @@ fun ActiveWorkoutScreen(viewModel: AppViewModel, sessionId: Long, nav: NavHostCo
                         currentSets.forEach { set ->
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Text("Set ${set.setNumber}: ${set.weight} x ${set.reps} (RIR ${set.rir})", style = MaterialTheme.typography.bodyMedium)
-                                IconButton(onClick = { viewModel.deleteSet(set.id) }) {
+                        IconButton(onClick = { viewModel.deleteSet(set) }) {
                                     Icon(Icons.Default.Delete, contentDescription = "Delete set", tint = MaterialTheme.colorScheme.error)
                                 }
                             }

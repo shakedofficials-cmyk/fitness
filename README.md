@@ -1,6 +1,6 @@
-# RecompOS
+# Greek God Physique
 
-RecompOS is a local-first native Android 12-week bodybuilding recomp tracker. It is written in Kotlin with Jetpack Compose, Material 3, Room, DataStore, WorkManager, coroutines, and Flow.
+Greek God Physique is a local-first native Android 12-week bodybuilding recomp tracker. It is written in Kotlin with Jetpack Compose, Material 3, Room, DataStore, WorkManager, coroutines, and Flow.
 
 ## What Is Included
 
@@ -11,7 +11,7 @@ RecompOS is a local-first native Android 12-week bodybuilding recomp tracker. It
 - Persistent logs for bodyweight, waist, nutrition, sleep, digestion/reflux, steps, cardio, supplements, habits, and photos by URI.
 - Analytics using Compose Canvas charts and a weekly coach-review engine.
 - Knowledge base covering recomp, RIR, progression, deloads, shoulder safety, nutrition, reflux, triglycerides, and supplements.
-- Local JSON/CSV export surface and JSON schema validation.
+- Local JSON/CSV export/import, clear-data controls, and undo for common deletes.
 - Configurable theme, units, and reminder scheduling.
 
 ## Build Requirements
@@ -43,7 +43,7 @@ app/build/outputs/apk/debug/app-debug.apk
 
 ## Privacy
 
-RecompOS has no mandatory login, no backend, no ads, no paywall, and no runtime network permission. Training, body, nutrition, recovery, and photo URI data are stored locally.
+Greek God Physique has no mandatory login, no backend, no ads, no paywall, and no runtime network permission. Training, body, nutrition, recovery, and photo URI data are stored locally.
 
 ## Medical Disclaimer
 

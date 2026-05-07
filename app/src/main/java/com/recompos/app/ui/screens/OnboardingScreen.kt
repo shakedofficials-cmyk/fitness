@@ -40,7 +40,7 @@ fun OnboardingScreen(viewModel: AppViewModel) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        ScreenHeader("RecompOS", "A serious 12-week recomp coach in your pocket")
+        ScreenHeader("Greek God Physique", "A serious 12-week recomp coach in your pocket")
         HeroPanel(
             eyebrow = "Local-first",
             title = "Build muscle without letting the waist run away.",

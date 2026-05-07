@@ -14,6 +14,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -48,8 +49,15 @@ fun AppRoot(viewModel: AppViewModel) {
         val nav = rememberNavController()
         val snackbarHostState = remember { SnackbarHostState() }
         LaunchedEffect(Unit) {
-            viewModel.uiEvent.collectLatest { message ->
-                snackbarHostState.showSnackbar(message)
+            viewModel.uiEvent.collectLatest { event ->
+                val result = snackbarHostState.showSnackbar(
+                    message = event.message,
+                    actionLabel = event.actionLabel,
+                    withDismissAction = event.actionLabel != null
+                )
+                if (result == SnackbarResult.ActionPerformed) {
+                    event.action?.invoke()
+                }
             }
         }
         val tabs = listOf(
@@ -63,7 +71,7 @@ fun AppRoot(viewModel: AppViewModel) {
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
-                    title = { Text("RecompOS") },
+                    title = { Text("Greek God Physique") },
                     actions = { IconButton(onClick = { nav.navigate("settings") }) { Icon(Icons.Default.Settings, contentDescription = "Settings") } }
                 )
             },

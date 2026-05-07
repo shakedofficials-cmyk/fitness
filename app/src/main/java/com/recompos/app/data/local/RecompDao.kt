@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -38,6 +39,9 @@ interface RecompDao {
     @Query("SELECT * FROM SetLogEntity WHERE exerciseSessionId = :exerciseSessionId ORDER BY setNumber, completedAtMillis") fun observeSets(exerciseSessionId: Long): Flow<List<SetLogEntity>>
     @Query("SELECT * FROM SetLogEntity ORDER BY completedAtMillis") fun observeAllSets(): Flow<List<SetLogEntity>>
     @Query("SELECT * FROM SetLogEntity WHERE exerciseSessionId IN (SELECT id FROM ExerciseSessionEntity WHERE exerciseTemplateId = :exerciseId) ORDER BY completedAtMillis") fun observeSetsForExercise(exerciseId: Int): Flow<List<SetLogEntity>>
+    @Query("SELECT * FROM WorkoutSessionEntity WHERE id = :id LIMIT 1") suspend fun getWorkoutSession(id: Long): WorkoutSessionEntity?
+    @Query("SELECT * FROM ExerciseSessionEntity WHERE workoutSessionId = :sessionId ORDER BY orderIndex") suspend fun getExerciseSessionsForWorkout(sessionId: Long): List<ExerciseSessionEntity>
+    @Query("SELECT * FROM SetLogEntity WHERE exerciseSessionId IN (SELECT id FROM ExerciseSessionEntity WHERE workoutSessionId = :sessionId) ORDER BY exerciseSessionId, setNumber") suspend fun getSetLogsForWorkout(sessionId: Long): List<SetLogEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertBodyweight(log: BodyweightLogEntity)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertWaist(log: WaistLogEntity)
@@ -57,6 +61,11 @@ interface RecompDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertDigestionLogs(logs: List<DigestionLogEntity>)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertStepsLogs(logs: List<StepsLogEntity>)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertCardioLogs(logs: List<CardioLogEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertSupplementLogs(logs: List<SupplementLogEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertHabitLogs(logs: List<HabitLogEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertPhotoLogs(logs: List<ProgressPhotoEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertWorkoutSessions(logs: List<WorkoutSessionEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertExerciseSessionsReplace(logs: List<ExerciseSessionEntity>)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertSetLogs(logs: List<SetLogEntity>)
 
     @Query("DELETE FROM SetLogEntity WHERE id = :id") suspend fun deleteSetLog(id: Long)
@@ -70,7 +79,48 @@ interface RecompDao {
     @Query("DELETE FROM SupplementLogEntity WHERE id = :id") suspend fun deleteSupplementLog(id: Long)
     @Query("DELETE FROM HabitLogEntity WHERE id = :id") suspend fun deleteHabitLog(id: Long)
     @Query("DELETE FROM ProgressPhotoEntity WHERE id = :id") suspend fun deletePhotoLog(id: Long)
+    @Query("DELETE FROM SetLogEntity WHERE exerciseSessionId IN (SELECT id FROM ExerciseSessionEntity WHERE workoutSessionId = :sessionId)") suspend fun deleteSetLogsForWorkout(sessionId: Long)
+    @Query("DELETE FROM ExerciseSessionEntity WHERE workoutSessionId = :sessionId") suspend fun deleteExerciseSessionsForWorkout(sessionId: Long)
     @Query("DELETE FROM WorkoutSessionEntity WHERE id = :id") suspend fun deleteWorkoutSession(id: Long)
+    @Query("DELETE FROM SetLogEntity") suspend fun deleteAllSets()
+    @Query("DELETE FROM ExerciseSessionEntity") suspend fun deleteAllExerciseSessions()
+    @Query("DELETE FROM WorkoutSessionEntity") suspend fun deleteAllWorkoutSessions()
+    @Query("DELETE FROM BodyweightLogEntity") suspend fun deleteAllBodyweights()
+    @Query("DELETE FROM WaistLogEntity") suspend fun deleteAllWaists()
+    @Query("DELETE FROM NutritionLogEntity") suspend fun deleteAllNutrition()
+    @Query("DELETE FROM SleepLogEntity") suspend fun deleteAllSleep()
+    @Query("DELETE FROM DigestionLogEntity") suspend fun deleteAllDigestion()
+    @Query("DELETE FROM StepsLogEntity") suspend fun deleteAllSteps()
+    @Query("DELETE FROM CardioLogEntity") suspend fun deleteAllCardio()
+    @Query("DELETE FROM SupplementLogEntity") suspend fun deleteAllSupplements()
+    @Query("DELETE FROM HabitLogEntity") suspend fun deleteAllHabits()
+    @Query("DELETE FROM ProgressPhotoEntity") suspend fun deleteAllPhotos()
+    @Query("DELETE FROM CoachRecommendationEntity") suspend fun deleteAllRecommendations()
+
+    @Transaction
+    suspend fun deleteWorkoutCascade(sessionId: Long) {
+        deleteSetLogsForWorkout(sessionId)
+        deleteExerciseSessionsForWorkout(sessionId)
+        deleteWorkoutSession(sessionId)
+    }
+
+    @Transaction
+    suspend fun clearUserData() {
+        deleteAllSets()
+        deleteAllExerciseSessions()
+        deleteAllWorkoutSessions()
+        deleteAllBodyweights()
+        deleteAllWaists()
+        deleteAllNutrition()
+        deleteAllSleep()
+        deleteAllDigestion()
+        deleteAllSteps()
+        deleteAllCardio()
+        deleteAllSupplements()
+        deleteAllHabits()
+        deleteAllPhotos()
+        deleteAllRecommendations()
+    }
 
     @Query("""
         SELECT * FROM SetLogEntity

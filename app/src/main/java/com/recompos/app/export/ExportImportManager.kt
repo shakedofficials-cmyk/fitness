@@ -12,6 +12,9 @@ data class ImportSnapshot(
     val digestion: List<DigestionLogEntity>,
     val steps: List<StepsLogEntity>,
     val cardio: List<CardioLogEntity>,
+    val supplements: List<SupplementLogEntity>,
+    val habits: List<HabitLogEntity>,
+    val photos: List<ProgressPhotoEntity>,
     val sets: List<SetLogEntity>
 )
 
@@ -24,6 +27,9 @@ class ExportImportManager {
         digestion: List<DigestionLogEntity>,
         steps: List<StepsLogEntity>,
         cardio: List<CardioLogEntity>,
+        supplements: List<SupplementLogEntity>,
+        habits: List<HabitLogEntity>,
+        photos: List<ProgressPhotoEntity>,
         sets: List<SetLogEntity>
     ): String = JSONObject()
         .put("schema", 1)
@@ -34,6 +40,9 @@ class ExportImportManager {
         .put("digestion", JSONArray(digestion.map { JSONObject().put("date", it.dateEpochDay).put("score", it.score).put("reflux", it.reflux).put("bloating", it.bloating).put("triggers", it.triggerFoods).put("notes", it.notes) }))
         .put("steps", JSONArray(steps.map { JSONObject().put("date", it.dateEpochDay).put("steps", it.steps).put("notes", it.notes) }))
         .put("cardio", JSONArray(cardio.map { JSONObject().put("date", it.dateEpochDay).put("modality", it.modality).put("duration", it.durationMinutes).put("intensity", it.intensity).put("notes", it.notes) }))
+        .put("supplements", JSONArray(supplements.map { JSONObject().put("date", it.dateEpochDay).put("creatine", it.creatineTaken).put("whey", it.wheyTaken).put("vitaminD", it.vitaminDTaken).put("omega3", it.omega3Taken).put("notes", it.notes) }))
+        .put("habits", JSONArray(habits.map { JSONObject().put("date", it.dateEpochDay).put("mobility", it.shoulderMobilityDone).put("breathing", it.breathingDone).put("photo", it.progressPhotoDone).put("notes", it.notes) }))
+        .put("photos", JSONArray(photos.map { JSONObject().put("date", it.dateEpochDay).put("viewType", it.viewType).put("uri", it.uri).put("notes", it.notes) }))
         .put("sets", JSONArray(sets.map { JSONObject().put("exerciseSessionId", it.exerciseSessionId).put("set", it.setNumber).put("weight", it.weight).put("reps", it.reps).put("rir", it.rir).put("pain", it.painScore).put("warmup", it.isWarmup).put("drop", it.isDropSet).put("notes", it.notes).put("completedAt", it.completedAtMillis) }))
         .toString(2)
 
@@ -49,7 +58,7 @@ class ExportImportManager {
 
     fun parseImport(json: String): ImportSnapshot {
         val root = JSONObject(json)
-        require(root.getInt("schema") == 1) { "Unsupported RecompOS import schema." }
+        require(root.getInt("schema") == 1) { "Unsupported Greek God Physique import schema." }
         return ImportSnapshot(
             bodyweights = root.optJSONArray("bodyweights").mapObjects {
                 BodyweightLogEntity(dateEpochDay = it.getLong("date"), weight = it.getDouble("weight"), notes = it.optString("notes"))
@@ -89,6 +98,33 @@ class ExportImportManager {
                     modality = it.optString("modality"),
                     durationMinutes = it.getInt("duration"),
                     intensity = it.optString("intensity"),
+                    notes = it.optString("notes")
+                )
+            },
+            supplements = root.optJSONArray("supplements").mapObjects {
+                SupplementLogEntity(
+                    dateEpochDay = it.getLong("date"),
+                    creatineTaken = it.optBoolean("creatine"),
+                    wheyTaken = it.optBoolean("whey"),
+                    vitaminDTaken = it.optBoolean("vitaminD"),
+                    omega3Taken = it.optBoolean("omega3"),
+                    notes = it.optString("notes")
+                )
+            },
+            habits = root.optJSONArray("habits").mapObjects {
+                HabitLogEntity(
+                    dateEpochDay = it.getLong("date"),
+                    shoulderMobilityDone = it.optBoolean("mobility"),
+                    breathingDone = it.optBoolean("breathing"),
+                    progressPhotoDone = it.optBoolean("photo"),
+                    notes = it.optString("notes")
+                )
+            },
+            photos = root.optJSONArray("photos").mapObjects {
+                ProgressPhotoEntity(
+                    dateEpochDay = it.getLong("date"),
+                    viewType = it.optString("viewType"),
+                    uri = it.optString("uri"),
                     notes = it.optString("notes")
                 )
             },
